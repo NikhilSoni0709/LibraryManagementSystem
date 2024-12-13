@@ -1,19 +1,14 @@
 # built-in
 import jwt
-from typing import Annotated, Union
-from fastapi import Depends, status, HTTPException
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import status, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from datetime import timedelta, datetime, timezone
 
 # custom
 from src.Security.HashGenerator import HashGenerator
-from src.Schema.UserSchema import UserSchema
-from src.Persistance.database import get_db_session
+from src.Persistance.database import get_db_session_instance
 from src.Models.UserModel import UserModel
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 class TokenData(BaseModel):
     username: str | None = None
@@ -60,7 +55,8 @@ class Security:
         return encoded_jwt
 
     @staticmethod
-    async def get_current_user(token, db_session: Session = Depends(get_db_session)):
+    def get_current_user(token):
+        db_session = get_db_session_instance()
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
@@ -68,7 +64,8 @@ class Security:
         )
         try:
             payload = jwt.decode(token, Security.SECRET_KEY, algorithms=[Security.ALGORITHM])
-            username: str = payload.get("sub")
+            username: str = payload.get("username")
+
             if username is None:
                 raise credentials_exception
             token_data = TokenData(username=username)
@@ -77,6 +74,7 @@ class Security:
             raise credentials_exception
         except jwt.InvalidTokenError:
             raise credentials_exception
+        
         user = Security.get_user(token_data.username, db_session)
         if user is None:
             raise credentials_exception

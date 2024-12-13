@@ -13,19 +13,23 @@ from src.Routers.UserRouter import user_router
 from src.Middleware.MyMiddleware import MyMiddleware
 from src.Security.Security import Security
 from src.Schema.TokenSchema import TokenSchema
-from src.Persistance.database import get_db_session
+from src.Persistance.database import get_db_session, get_db_session_instance
+from src.Security.HashGenerator import HashGenerator
 
 
 class LibrarySystem(FastAPI):
     def __init__(self):
         super().__init__()
         self.add_middleware(MyMiddleware)
-        self.initialize_library()
         self.initialize_endpoints()
         Base.metadata.create_all(db_engine)
+        self.add_default_admin()
 
-    def initialize_library(self):
-        print(f"Library initialized...")
+    def add_default_admin(self):
+        db_session = get_db_session_instance()
+        password_hash = HashGenerator.generate("admin@123")
+        db_session.add(UserModel.UserModel(name="admin", password=password_hash, email="someemail", category="admin"))
+        db_session.commit()
 
     def initialize_endpoints(self):
         self.add_api_route("/health",

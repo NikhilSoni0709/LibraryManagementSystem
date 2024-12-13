@@ -5,8 +5,6 @@ from sqlalchemy.orm import relationship
 
 # custom
 from src.Persistance.database import Base, db_engine
-# from src.Models.BookModel import BookModel
-# from src.Models.UserModel import UserModel
 
 
 class Borrowings(Base):
@@ -14,8 +12,10 @@ class Borrowings(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     possession_time = Column(Integer)  # Adjust data type as needed
-    from_time = Column(DateTime)  # Adjust data type as needed
-    to_time = Column(DateTime)  # Adjust data type as needed
+    alloted_from_time = Column(DateTime)  # Adjust data type as needed
+    alloted_to_time = Column(DateTime)  # Adjust data type as needed
+    ask_from_time = Column(DateTime)
+    ask_to_time = Column(DateTime)
     status = Column(String)
     book_id = Column(Integer, ForeignKey('books.id'))
     user_id = Column(Integer, ForeignKey('users.id'))

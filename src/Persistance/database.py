@@ -17,3 +17,8 @@ def get_db_session():
         yield session
     finally:
         session.close()
+
+
+def get_db_session_instance():
+    session = SessionLocal()
+    return session

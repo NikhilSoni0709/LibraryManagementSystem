@@ -15,15 +15,15 @@ from src.Schema.UserBorrowHistoryResponse import UserBorrowHistoryResponse
 from src.Schema.BookSchema import BookSchema
 
 user_router = APIRouter(
-    prefix="/{user_id}"
+    prefix="/user"
 )
 
 def get_user(user_id: int, db_session: Session):
     user = db_session.query(UserModel).filter(UserModel.id == user_id).first()
     return user
 
-def get_book_data(book_id: int, db_session: Session):
-    book_obj = db_session.query(BookModel).join(BookCountModel, BookModel.id == BookCountModel.id).filter(BookModel.id == book_id).first()
+def get_book_data(book_name: str, db_session: Session):
+    book_obj = db_session.query(BookModel).join(BookCountModel, BookModel.id == BookCountModel.id).filter(BookModel.name == book_name).first()
     return book_obj
 
 def get_borrow_history(user_id: int, db_session: Session):
@@ -40,33 +40,34 @@ def hello():
 
 
 @user_router.post("/borrow")
-def book_request(request: Request, user_id: int, borrow_data: BorrowRequestSchema, db_session: Session = Depends(get_db_session)):
+def book_request(request: Request, borrow_data: BorrowRequestSchema, db_session: Session = Depends(get_db_session)):
     try:
+        user_id = request.state.user_id
         user = get_user(user_id, db_session)
 
         if not user:
             return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"Invalid user_id: {user_id}"})
         
-        book_id = borrow_data.book_id
+        book_name = borrow_data.book_name
         
-        book_obj = get_book_data(book_id, db_session)
+        book_obj = get_book_data(book_name, db_session)
 
         if not book_obj:
-            return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"Invalid book_id: {book_id}"})
+            return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"Invalid book: {book_name}"})
 
         if book_obj.book_count.count <= 0:
             return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"message": f"No books available with name: {book_obj.name}"})
 
 
-        borrowing_obj = Borrowings.Borrowings(from_time=borrow_data.from_time,
-                                   to_time=borrow_data.to_time,
-                                   book_id=borrow_data.book_id,
+        borrowing_obj = Borrowings(ask_from_time=borrow_data.ask_from_time,
+                                   ask_to_time=borrow_data.ask_to_time,
+                                   book_id=book_obj.id,
                                    user_id=user_id,
                                    status="PENDING")
         db_session.add(borrowing_obj)
 
-        new_book_count = BookModel.BookCountModel(id=book_obj.id,
-                                                  count=book_obj.book_count.count-1)
+        new_book_count = BookCountModel(id=book_obj.id,
+                                        count=book_obj.book_count.count-1)
 
         db_session.merge(new_book_count)
         db_session.commit()
