@@ -1,9 +1,11 @@
 LibrarySystem
 
+
 Get-started:
     - pip install -r requirements.txt
     - change database url in src/Persistance/database.py (can be made configurable later)
     - python3.11 start_library_service.py {host} {port}
+
 
 General:
     - admin user will be created by default with username as "admin" and password as "admin@123"
