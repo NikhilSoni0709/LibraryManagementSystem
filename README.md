@@ -2,12 +2,14 @@ LibrarySystem
 
 
 Get-started:
+
     - pip install -r requirements.txt
     - change database url in src/Persistance/database.py (can be made configurable later)
     - python3.11 start_library_service.py {host} {port}
 
 
 General:
+
     - admin user will be created by default with username as "admin" and password as "admin@123"
     - JWT authentication has been added with an expiration time of 30 mins via Middleware
     - only admins can add users and books, and approve/deny a borrow request
@@ -16,6 +18,7 @@ General:
 
 
 Endpoints:
+
     - POST: /login
         - data = {"username": "someuser", "password": "somepassword"}
     
