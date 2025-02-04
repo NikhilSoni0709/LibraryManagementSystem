@@ -26,8 +26,8 @@ class Security:
         user = Security.get_user(username, db_session)
         if user and Security.verify_password(password, user.password):
             print(f"Verified user: {username}")
-            return True
-        return False
+            return True, user
+        return False, None
 
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -47,12 +47,13 @@ class Security:
         to_encode = data.copy()
         expire = datetime.now(timezone.utc) + timedelta(minutes=Security.ACCESS_TOKEN_EXPIRE_MINUTES)
 
-        if not Security.is_valid_user_and_password(data["username"], data["password"], db_session):
+        bool, user = Security.is_valid_user_and_password(data["username"], data["password"], db_session)
+        if not bool:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No such user")
 
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, Security.SECRET_KEY, algorithm=Security.ALGORITHM)
-        return encoded_jwt
+        return encoded_jwt, user
 
     @staticmethod
     def get_current_user(token):

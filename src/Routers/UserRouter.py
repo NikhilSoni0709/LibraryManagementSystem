@@ -19,8 +19,8 @@ user_router = APIRouter(
     prefix="/user"
 )
 
-def get_user(user_id: int, db_session: Session):
-    user = db_session.query(UserModel).filter(UserModel.id == user_id).first()
+def get_user(user_name: str, db_session: Session):
+    user = db_session.query(UserModel).filter(UserModel.name == user_name).first()
     return user
 
 def get_book_data(book_name: str, db_session: Session):
@@ -91,12 +91,12 @@ def get_user_borrow_history(request: Request, user_id: int, db_session: Session 
     return get_borrow_history(user_id, db_session)
     
 
-@user_router.get("/books", response_model=List[BookSchema])
-def get_all_books(request: Request, user_id: str, db_session: Session = Depends(get_db_session)):
-    user = get_user(user_id, db_session)
+@user_router.get("/books/{user_name}", response_model=List[BookSchema])
+def get_all_books(request: Request, user_name: str, db_session: Session = Depends(get_db_session)):
+    user = get_user(user_name, db_session)
 
     if not user:
-        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"Invalid user_id: {user_id}"})
+        return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": f"Invalid user_id: {user_name}"})
     
     return get_all_books_in_db(db_session)
 

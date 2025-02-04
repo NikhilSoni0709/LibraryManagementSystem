@@ -24,6 +24,10 @@ librarian_router = APIRouter(
     prefix="/admin"
 )
 
+def get_all_books(db_session: Session):
+    books_obj = db_session.query(BookModel).join(BookCountModel, BookModel.id == BookCountModel.id).all()
+    return books_obj
+
 @librarian_router.get("/hello")
 def hello():
     print(f"In Hello")
@@ -39,8 +43,10 @@ def add_user(request: Request, user: UserSchema, db_session: Session = Depends(g
 
 @librarian_router.post("/book")
 def add_book(requests: Request, book: Dict[str, Union[str, int]], db_session: Session = Depends(get_db_session)):
-    new_book = BookModel(name=book["name"], category=book["category"])
+    new_book = BookModel(name=book["name"], category=book["category"], author_name=book["author_name"], stock=book["count"])
     new_book.book_count = BookCountModel(count=book["count"])
+    db_session.add(new_book.book_count)
+    db_session.commit()
     db_session.add(new_book)
     db_session.commit()
     print(f"Book Added: {book}")
@@ -113,4 +119,17 @@ def return_book_with_id(request: Request, book_data: dict, db_session: Session =
     book_count.count += 1
     borrowing.status = EnumsClass.BorrowStatus.REVIVED.name
 
+    db_session.commit()
+
+@librarian_router.get('/book')
+def all_books(request: Request, db_session: Session = Depends(get_db_session)):
+    return get_all_books(db_session)
+
+@librarian_router.delete('/book/{book_name}')
+def delete_book(request: Request, book_name: str = None, db_session: Session = Depends(get_db_session)):
+    book = db_session.query(BookModel).filter(BookModel.name==book_name).first()
+    book_count = db_session.query(BookCountModel).filter(BookCountModel.id==book.id).first()
+    db_session.delete(book_count)
+    db_session.commit()
+    db_session.delete(book)
     db_session.commit()
