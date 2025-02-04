@@ -36,10 +36,15 @@ class LibrarySystem(FastAPI):
         self.include_router(user_router)
     
     def login_user(self, data: Annotated[OAuth2PasswordRequestForm, Depends()], db_session: Session = Depends(get_db_session)) -> TokenSchema:
-        access_token = Security.create_access_token({"username": data.username, "password": data.password}, db_session)
+        access_token, user = Security.create_access_token({"username": data.username, "password": data.password}, db_session)
         if access_token is None:
+            print(f"HERE")
             return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content="No Such user")
-        return TokenSchema(access_token=access_token, token_type="bearer")
+
+        user_dict = {"name": user.name,
+                     "category": user.category}
+        
+        return TokenSchema(access_token=access_token, token_type="bearer", user=user_dict)
 
     def get_health(self):
         return JSONResponse({

@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 
 DATABASE_URL = "postgresql://library_db_user:billion@0.0.0.0:5432/library_db"
+# DATABASE_URL = "sqlite:///library_system.db"
 
 db_engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=db_engine)

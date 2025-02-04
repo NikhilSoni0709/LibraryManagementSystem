@@ -16,10 +16,10 @@ class MyMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         url = str(request.url)
 
-        if "docs" in str(request.url):
-            response = await call_next(request)
+        # if "docs" in str(request.url):
+        #     response = await call_next(request)
         
-        elif "login" in str(request.url):
+        if "login" in str(request.url):
             response = await call_next(request)
         else:
             if "Authorization" in request.headers:
